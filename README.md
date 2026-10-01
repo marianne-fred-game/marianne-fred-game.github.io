@@ -1,4 +1,4 @@
-# Marianne & Fred Game
+# Marine & Fred Game
 
 > **Déploiement** : https://marianne-fred-game.github.io/
 
