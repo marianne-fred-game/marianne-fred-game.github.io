@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="fr"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Marianne &amp; Fred Game</title>
+<meta name="description" content="Un petit jeu rien que pour vous : tentez votre chance !">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Marianne &amp; Fred Game">
+<meta property="og:title" content="Marianne &amp; Fred Game 🎰">
+<meta property="og:description" content="Un petit jeu rien que pour vous : tentez votre chance !">
+<meta property="og:image" content="https://marianne-fred-game.github.io/apercu.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="apple-mobile-web-app-title" content="Marianne &amp; Fred Game">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;800&family=Shrikhand&display=swap">
+<style>
+  :root { --fond: #0d0612; --fond-haut: #34104a; --fond-milieu: #12061c; --or: #ffc428; --or-clair: #fff5c8; --encre: #5a1400; --rose: #ff78aa; --bleu: #0a1a44; --bleu-haut: #1c3477; --bleu-vif: #3c6ee0; --rouge: #c8102e; --rouge-clair: #ff4d6d; --blanc: #ffffff; color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: var(--fond); overflow: hidden;
+               -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  .scene { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+           background: radial-gradient(ellipse at 50% 35%, #34104a 0%, #12061c 60%, var(--fond) 100%); }
+  .ecran { position: relative; height: 100dvh; max-height: 100%; aspect-ratio: 9 / 16; max-width: 100vw; container-type: size; }
+  /* Les vidéos ne sont qu'une surface : aucun contrôle, aucun clic ne les atteint */
+  video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+          pointer-events: none; background: transparent; transition: opacity .25s; }
+  video::-webkit-media-controls, video::-webkit-media-controls-panel,
+  video::-webkit-media-controls-start-playback-button,
+  video::-webkit-media-controls-overlay-play-button,
+  video::-webkit-media-controls-enclosure { display: none !important; -webkit-appearance: none; }
+  #partie, #suite { opacity: 0; }
+  /* Calqué au pixel près sur le bouton dessiné de la vidéo (560×130 px centré à y=1700 sur 1920) :
+     au moment de l'appui, la vidéo reprend sur sa version « enfoncée », sans saut visible. */
+  #cliquez { display: none; position: absolute; left: 50%; top: 88.54%; transform: translate(-50%, -50%);
+             width: 51.85cqw; height: 6.77cqh; box-sizing: border-box; border-radius: 999px; cursor: pointer;
+             background: #ffc428; border: .3cqh solid #fff5c8; color: #5a1400;
+             font: 900 3.2cqh/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+             animation: apparition .45s cubic-bezier(.3, 1.6, .5, 1) both, pulse 1.3s ease-in-out .45s infinite; }
+  @keyframes apparition { from { transform: translate(-50%, -50%) scale(0); } to { transform: translate(-50%, -50%) scale(1); } }
+  #jouer { position: absolute; left: 50%; top: 91.5%; transform: translate(-50%, -50%);
+           font: 900 3.1cqh/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+           letter-spacing: .06em; padding: .55em 1.7em; border-radius: 999px; cursor: pointer;
+           color: #5a1400; border: 4px solid #fff5c8;
+           background: linear-gradient(180deg, #ffe27a 0%, #ffc23a 55%, #f39a1e 100%);
+           box-shadow: 0 6px 0 #a35a00, 0 0 0 0 rgba(255, 214, 92, .6);
+           animation: pulse 1.3s ease-in-out infinite; }
+  #jouer:active { transform: translate(-50%, -46%); box-shadow: 0 2px 0 #a35a00; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 6px 0 #a35a00, 0 0 0 0 rgba(255, 214, 92, .55); }
+    60%      { box-shadow: 0 6px 0 #a35a00, 0 0 0 26px rgba(255, 214, 92, 0); }
+  }
+
+  /* Fin : la salle de jeu remonte et sort par le haut, le mot des participants arrive par le bas */
+  .scene { transition: transform .8s cubic-bezier(.6, 0, .25, 1); }
+  .scene.monte { transform: translateY(-100%); }
+  #merci { position: fixed; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center;
+           padding-inline: 24px; overflow-y: auto; text-align: center; transform: translateY(100%);
+           transition: transform .8s cubic-bezier(.6, 0, .25, 1);
+           background: radial-gradient(ellipse at 50% 30%, var(--fond-haut) 0%, var(--fond-milieu) 65%, var(--fond) 100%); }
+  #merci.visible { transform: translateY(0); }
+  #merci { padding-bottom: calc(5.4vh + 26px); box-sizing: border-box; }
+  .mot { max-width: 32rem; display: flex; flex-direction: column; gap: .9em; padding-block: 20px;
+         color: var(--or-clair); font: 400 clamp(15px, 2.25vh, 21px)/1.5 "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .mot p { margin: 0; text-wrap: pretty; }
+  .credit { position: absolute; left: 0; right: 0; bottom: calc(5.4vh + 6px); margin: 0; text-align: center;
+            font: 400 10px/1.3 "Nunito", system-ui, sans-serif; color: var(--blanc); opacity: .55; }
+  .credit a { color: inherit; }
+  .mot .adresse { font: 400 clamp(26px, 4.6vh, 44px)/1.1 "Shrikhand", Georgia, serif; color: var(--or); }
+  .mot strong { color: var(--or); font-weight: 800; }
+  .mot .merci { margin: .3em 0 0; font: 400 clamp(38px, 7.5vh, 80px)/1 "Shrikhand", Georgia, serif; color: var(--or);
+                text-wrap: balance; text-shadow: 0 4px 0 #6e2800; }
+  .mot .bisous { font: 400 clamp(24px, 4.2vh, 40px)/1 "Shrikhand", Georgia, serif; color: var(--rose); }
+  @media (prefers-reduced-motion: reduce) { .scene, #merci { transition-duration: .01s; } }
+
+  /* Écran final façon bannière US : bleu nuit étoilé, bande rouge et blanche, drapeau qui flotte */
+  #merci { background:
+             radial-gradient(circle, rgba(255,255,255,.55) 1.2px, transparent 1.6px) 0 0 / 46px 46px,
+             radial-gradient(circle, rgba(255,255,255,.3) 1px, transparent 1.4px) 23px 23px / 46px 46px,
+             radial-gradient(ellipse at 50% 30%, var(--bleu-haut) 0%, var(--bleu) 70%) !important; }
+  #merci::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 5.4vh;
+                  background: repeating-linear-gradient(180deg, var(--rouge) 0 .9vh, var(--blanc) .9vh 1.8vh); opacity: .9; }
+  .mot { color: var(--blanc); }
+  .mot strong { color: var(--or); }
+  .mot .merci { color: var(--blanc); text-shadow: 4px 4px 0 var(--rouge), 8px 8px 0 var(--bleu-vif); }
+  .mot .bisous { color: var(--rouge-clair); }
+  .drapeau { width: min(38vw, 180px); align-self: center; transform-origin: 0 50%;
+             animation: flotte 2.4s ease-in-out infinite; filter: drop-shadow(0 6px 10px rgba(0,0,0,.4)); }
+  @keyframes flotte { 0%, 100% { transform: perspective(400px) rotateY(-12deg) skewY(-2deg); }
+                      50% { transform: perspective(400px) rotateY(10deg) skewY(2deg); } }
+  .ciel { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 6; }
+  .etoile { position: absolute; top: -8vh; color: var(--or); pointer-events: none;
+            animation: tombe linear forwards; }
+  @keyframes tombe { to { transform: translateY(120vh) rotate(540deg); } }
+  @media (prefers-reduced-motion: reduce) { .drapeau, .etoile { animation: none; } .etoile { display: none; } }
+</style>
+</head><body oncontextmenu="return false">
+<div class="scene"><div class="ecran">
+  <video id="repos" src="idle.mp4" poster="poster.jpg" autoplay muted loop playsinline webkit-playsinline
+         disablepictureinpicture disableremoteplayback></video>
+  <video id="partie" src="partie.mp4" preload="auto" playsinline webkit-playsinline
+         disablepictureinpicture disableremoteplayback></video>
+  <video id="suite" src="suite.mp4" preload="auto" playsinline webkit-playsinline
+         disablepictureinpicture disableremoteplayback></video>
+  <button id="jouer" type="button">🎰 JOUER</button>
+  <button id="cliquez" type="button">Cliquez ici</button>
+</div></div>
+<section id="merci" aria-live="polite">
+  <div class="mot">
+    <svg class="drapeau" viewBox="0 0 190 100" aria-label="Drapeau des États-Unis" role="img">
+      <g fill="#b22234"><rect y="0.00" width="190" height="7.69"/><rect y="15.38" width="190" height="7.69"/><rect y="30.77" width="190" height="7.69"/><rect y="46.15" width="190" height="7.69"/><rect y="61.54" width="190" height="7.69"/><rect y="76.92" width="190" height="7.69"/><rect y="92.31" width="190" height="7.69"/></g>
+      <rect width="76" height="53.85" fill="#3c3b6e"/>
+      <g fill="#fff"><circle cx="6.3" cy="5.4" r="1.9"/><circle cx="19.0" cy="5.4" r="1.9"/><circle cx="31.7" cy="5.4" r="1.9"/><circle cx="44.3" cy="5.4" r="1.9"/><circle cx="57.0" cy="5.4" r="1.9"/><circle cx="69.7" cy="5.4" r="1.9"/><circle cx="12.7" cy="10.8" r="1.9"/><circle cx="25.3" cy="10.8" r="1.9"/><circle cx="38.0" cy="10.8" r="1.9"/><circle cx="50.7" cy="10.8" r="1.9"/><circle cx="63.3" cy="10.8" r="1.9"/><circle cx="6.3" cy="16.2" r="1.9"/><circle cx="19.0" cy="16.2" r="1.9"/><circle cx="31.7" cy="16.2" r="1.9"/><circle cx="44.3" cy="16.2" r="1.9"/><circle cx="57.0" cy="16.2" r="1.9"/><circle cx="69.7" cy="16.2" r="1.9"/><circle cx="12.7" cy="21.5" r="1.9"/><circle cx="25.3" cy="21.5" r="1.9"/><circle cx="38.0" cy="21.5" r="1.9"/><circle cx="50.7" cy="21.5" r="1.9"/><circle cx="63.3" cy="21.5" r="1.9"/><circle cx="6.3" cy="26.9" r="1.9"/><circle cx="19.0" cy="26.9" r="1.9"/><circle cx="31.7" cy="26.9" r="1.9"/><circle cx="44.3" cy="26.9" r="1.9"/><circle cx="57.0" cy="26.9" r="1.9"/><circle cx="69.7" cy="26.9" r="1.9"/><circle cx="12.7" cy="32.3" r="1.9"/><circle cx="25.3" cy="32.3" r="1.9"/><circle cx="38.0" cy="32.3" r="1.9"/><circle cx="50.7" cy="32.3" r="1.9"/><circle cx="63.3" cy="32.3" r="1.9"/><circle cx="6.3" cy="37.7" r="1.9"/><circle cx="19.0" cy="37.7" r="1.9"/><circle cx="31.7" cy="37.7" r="1.9"/><circle cx="44.3" cy="37.7" r="1.9"/><circle cx="57.0" cy="37.7" r="1.9"/><circle cx="69.7" cy="37.7" r="1.9"/><circle cx="12.7" cy="43.1" r="1.9"/><circle cx="25.3" cy="43.1" r="1.9"/><circle cx="38.0" cy="43.1" r="1.9"/><circle cx="50.7" cy="43.1" r="1.9"/><circle cx="63.3" cy="43.1" r="1.9"/><circle cx="6.3" cy="48.5" r="1.9"/><circle cx="19.0" cy="48.5" r="1.9"/><circle cx="31.7" cy="48.5" r="1.9"/><circle cx="44.3" cy="48.5" r="1.9"/><circle cx="57.0" cy="48.5" r="1.9"/><circle cx="69.7" cy="48.5" r="1.9"/></g>
+    </svg>
+    <p class="adresse">Marianne et Fred,</p>
+    <p>L'ensemble des participants de la <strong>Fucking September Party</strong> vous embrasse fort et vous remercie de ce moment de fête&nbsp;🥳</p>
+    <p>Nous avons le plaisir de vous offrir ce modeste présent sous forme de CB prépayée (surveillez votre boîte aux lettres&nbsp;📬), qu'on vous souhaite de bien dépenser.</p>
+    <p class="merci">MERCI&nbsp;🙏</p>
+    <p class="bisous">Bisous&nbsp;💋</p>
+  </div>
+  <p class="credit">Musique : « Funkorama », Kevin MacLeod (<a href="https://incompetech.com" target="_blank" rel="noopener">incompetech.com</a>), licence <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" target="_blank" rel="noopener">CC BY 4.0</a></p>
+</section>
+<audio id="fete" src="fete.mp3" loop preload="auto"></audio>
+<audio id="musique" src="musique.m4a" loop preload="auto"></audio>
+<script>
+  const repos = document.getElementById("repos"), partie = document.getElementById("partie");
+  const bouton = document.getElementById("jouer"), musique = document.getElementById("musique");
+  const fete = document.getElementById("fete");
+  const suite = document.getElementById("suite"), cliquez = document.getElementById("cliquez");
+  musique.volume = 0.5;
+
+  // Les navigateurs bloquent le son avant le premier geste : on tente tout de suite,
+  // puis on relance au premier toucher, où qu'il soit.
+  const lancerMusique = () => musique.play().catch(() => {});
+  lancerMusique();
+  const auPremierGeste = () => { lancerMusique(); document.removeEventListener("pointerdown", auPremierGeste); };
+  document.addEventListener("pointerdown", auPremierGeste);
+
+  function fonduMusique() {
+    const v0 = musique.volume; let k = 0;
+    const id = setInterval(() => {
+      k += 1; musique.volume = Math.max(0, v0 * (1 - k / 12));
+      if (k >= 12) { clearInterval(id); musique.pause(); }
+    }, 40);
+  }
+
+  bouton.addEventListener("click", async () => {
+    bouton.style.display = "none";
+    fonduMusique();
+    partie.currentTime = 0;
+    try { await partie.play(); } catch (e) { partie.muted = true; await partie.play(); }
+    partie.style.opacity = 1; repos.style.opacity = 0;
+    setTimeout(() => repos.pause(), 300);
+  });
+  // Fin de la première partie : l'image reste sur « 373 kisses », le vrai bouton apparaît.
+  partie.addEventListener("ended", () => { cliquez.style.display = "block"; });
+
+  cliquez.addEventListener("click", async () => {
+    cliquez.style.display = "none";
+    suite.currentTime = 0;
+    try { await suite.play(); } catch (e) { suite.muted = true; await suite.play(); }
+    suite.style.opacity = 1; partie.style.opacity = 0;
+  });
+  // Fin de la conversion : on laisse « 373 € » à l'écran un instant, puis tout remonte vers le mot final.
+  // Trois déclencheurs pour la même fin, un seul effet : l'événement « ended » n'est pas
+  // émis de façon fiable par tous les navigateurs (iOS, cadre embarqué), d'où la position
+  // de lecture et un minuteur de secours calé sur la durée réelle de la vidéo.
+  let finLancee = false;
+  function finale() {
+    if (finLancee) return; finLancee = true;
+    setTimeout(() => {
+      document.querySelector(".scene").classList.add("monte");
+      document.getElementById("merci").classList.add("visible");
+      musique.pause();
+      fete.currentTime = 0; fete.volume = 0.8; fete.play().catch(() => {});
+      const ciel = document.createElement("div"); ciel.className = "ciel";   // calque qui découpe les étoiles
+      document.getElementById("merci").appendChild(ciel);
+      for (let i = 0; i < 26; i++) {                       // pluie d'étoiles, une seule fois
+        const e = document.createElement("span"); e.className = "etoile"; e.textContent = "★";
+        e.style.left = Math.random() * 96 + "%"; e.style.fontSize = (14 + Math.random() * 22) + "px";
+        e.style.animationDuration = (3.5 + Math.random() * 3) + "s"; e.style.animationDelay = (1.2 + Math.random() * 2.5) + "s";
+        e.style.color = ["var(--or)", "var(--blanc)", "var(--rouge-clair)"][i % 3];
+        ciel.appendChild(e);
+      }
+    }, 350);
+  }
+  suite.addEventListener("ended", finale);
+  suite.addEventListener("timeupdate", () => {
+    if (suite.duration && suite.currentTime >= suite.duration - 0.25) finale();
+  });
+  suite.addEventListener("playing", () => {
+    const reste = (suite.duration || 6.3) - suite.currentTime;
+    setTimeout(finale, (reste + 0.6) * 1000);
+  }, { once: true });
+  // À la fin, la vidéo reste figée sur « 373 💋 ➡️ 373 € » : aucun écran de lecteur ne réapparaît.
+</script>
+</body></html>
