@@ -2,6 +2,7 @@
 <html lang="fr"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d0612">
 <title>Marianne &amp; Fred Game</title>
 <meta name="description" content="Un petit jeu rien que pour vous : tentez votre chance !">
 <meta property="og:type" content="website">
@@ -59,7 +60,8 @@
            padding-inline: 24px; overflow-y: auto; text-align: center; transform: translateY(100%);
            transition: transform .8s cubic-bezier(.6, 0, .25, 1);
            background: radial-gradient(ellipse at 50% 30%, var(--fond-haut) 0%, var(--fond-milieu) 65%, var(--fond) 100%); }
-  #merci.visible { transform: translateY(0); }
+  #merci { visibility: hidden; }
+  #merci.visible { transform: translateY(0); visibility: visible; }
   #merci { padding-bottom: calc(5.4vh + 26px); box-sizing: border-box; }
   .mot { max-width: 32rem; display: flex; flex-direction: column; gap: .9em; padding-block: 20px;
          color: var(--or-clair); font: 400 clamp(15px, 2.25vh, 21px)/1.5 "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif; }
