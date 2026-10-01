@@ -28,6 +28,9 @@
   video::-webkit-media-controls-overlay-play-button,
   video::-webkit-media-controls-enclosure { display: none !important; -webkit-appearance: none; }
   #partie, #suite { opacity: 0; }
+  #affiche { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+  #repos { visibility: hidden; }
+  #repos.joue { visibility: visible; }
   /* Calqué au pixel près sur le bouton dessiné de la vidéo (560×130 px centré à y=1700 sur 1920) :
      au moment de l'appui, la vidéo reprend sur sa version « enfoncée », sans saut visible. */
   #cliquez { display: none; position: absolute; left: 50%; top: 88.54%; transform: translate(-50%, -50%);
@@ -95,6 +98,7 @@
 </style>
 </head><body oncontextmenu="return false">
 <div class="scene"><div class="ecran">
+  <img id="affiche" src="poster.jpg" alt="">
   <video id="repos" src="idle.mp4" poster="poster.jpg" autoplay muted loop playsinline webkit-playsinline
          disablepictureinpicture disableremoteplayback></video>
   <video id="partie" src="partie.mp4" preload="auto" playsinline webkit-playsinline
@@ -126,6 +130,7 @@
   const repos = document.getElementById("repos"), partie = document.getElementById("partie");
   const bouton = document.getElementById("jouer"), musique = document.getElementById("musique");
   const fete = document.getElementById("fete");
+  repos.addEventListener("playing", () => repos.classList.add("joue"), { once: true });
   const suite = document.getElementById("suite"), cliquez = document.getElementById("cliquez");
   musique.volume = 0.5;
 
@@ -149,7 +154,7 @@
     fonduMusique();
     partie.currentTime = 0;
     try { await partie.play(); } catch (e) { partie.muted = true; await partie.play(); }
-    partie.style.opacity = 1; repos.style.opacity = 0;
+    partie.style.opacity = 1; repos.style.opacity = 0; document.getElementById("affiche").style.opacity = 0;
     setTimeout(() => repos.pause(), 300);
   });
   // Fin de la première partie : l'image reste sur « 373 kisses », le vrai bouton apparaît.
