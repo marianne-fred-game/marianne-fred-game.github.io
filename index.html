@@ -98,6 +98,21 @@
   @keyframes tombe { to { transform: translateY(120vh) rotate(540deg); } }
   @media (prefers-reduced-motion: reduce) { .drapeau, .etoile { animation: none; } .etoile { display: none; } }
   @media (max-height: 580px) { .mot { padding-block: 6px; gap: .7em; } .drapeau { width: min(32vw, 140px); } }
+
+  /* Écran d'entrée : le navigateur n'autorise le son qu'après un toucher ; ce toucher lance la musique d'ascenseur */
+  #entree { position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; gap: 2.2cqh; text-align: center; padding-inline: 8cqw;
+            background: rgba(13, 6, 18, .78); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+            transition: opacity .45s; }
+  #entree.parti { opacity: 0; pointer-events: none; }
+  #entree h1 { margin: 0; font: 400 6.4cqh/1.05 "Shrikhand", Georgia, serif; color: var(--or);
+               text-shadow: 0 .4cqh 0 #6e2800; text-wrap: balance; }
+  #entree p { margin: 0; font: 400 2.6cqh/1.4 "Nunito", system-ui, sans-serif; color: var(--or-clair); }
+  #entrer { font: 900 3.1cqh/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; letter-spacing: .06em;
+            padding: .6em 1.7em; border-radius: 999px; cursor: pointer; color: var(--encre);
+            border: 4px solid var(--or-clair); background: linear-gradient(180deg, #ffe27a 0%, #ffc23a 55%, #f39a1e 100%);
+            box-shadow: 0 6px 0 #a35a00; animation: pulse 1.3s ease-in-out infinite; }
+  #entrer:focus-visible { outline: 3px solid var(--or-clair); outline-offset: 4px; }
 </style>
 </head><body oncontextmenu="return false">
 <div class="scene"><div class="ecran">
@@ -108,6 +123,11 @@
          disablepictureinpicture disableremoteplayback></video>
   <video id="suite" src="suite.mp4" preload="auto" playsinline webkit-playsinline
          disablepictureinpicture disableremoteplayback></video>
+  <div id="entree">
+    <h1>Marine &amp; Fred</h1>
+    <p>une surprise vous attend…</p>
+    <button id="entrer" type="button">Entrer&nbsp;🔊</button>
+  </div>
   <button id="jouer" type="button">🎰 JOUER</button>
   <button id="cliquez" type="button">Cliquez ici</button>
 </div></div>
@@ -125,10 +145,10 @@
     <p class="bisous">Bisous&nbsp;💋</p>
     <p class="bientot">et à très bientôt&nbsp;🤗</p>
   </div>
-  <p class="credit">Musique : « Funkorama », Kevin MacLeod (<a href="https://incompetech.com" target="_blank" rel="noopener">incompetech.com</a>), licence <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" target="_blank" rel="noopener">CC BY 4.0</a></p>
+  <p class="credit">Musique : « Local Forecast – Elevator » et « Funkorama », Kevin MacLeod (<a href="https://incompetech.com" target="_blank" rel="noopener">incompetech.com</a>), licence <a href="https://creativecommons.org/licenses/by/4.0/deed.fr" target="_blank" rel="noopener">CC BY 4.0</a></p>
 </section>
 <audio id="fete" src="fete.mp3" loop preload="auto"></audio>
-<audio id="musique" src="musique.m4a" loop preload="auto"></audio>
+<audio id="musique" src="ascenseur.mp3" loop preload="auto"></audio>
 <script>
   const repos = document.getElementById("repos"), partie = document.getElementById("partie");
   const bouton = document.getElementById("jouer"), musique = document.getElementById("musique");
@@ -140,6 +160,10 @@
   // Les navigateurs bloquent le son avant le premier geste : on tente tout de suite,
   // puis on relance au premier toucher, où qu'il soit.
   const lancerMusique = () => musique.play().catch(() => {});
+  document.getElementById("entrer").addEventListener("click", () => {
+    musique.currentTime = 0; lancerMusique();
+    document.getElementById("entree").classList.add("parti");
+  });
   lancerMusique();
   const auPremierGeste = () => { lancerMusique(); document.removeEventListener("pointerdown", auPremierGeste); };
   document.addEventListener("pointerdown", auPremierGeste);
