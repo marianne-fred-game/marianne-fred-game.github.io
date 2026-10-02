@@ -97,6 +97,7 @@
             animation: tombe linear forwards; }
   @keyframes tombe { to { transform: translateY(120vh) rotate(540deg); } }
   @media (prefers-reduced-motion: reduce) { .drapeau, .etoile { animation: none; } .etoile { display: none; } }
+  @media (max-height: 580px) { .mot { padding-block: 6px; gap: .7em; } .drapeau { width: min(32vw, 140px); } }
 </style>
 </head><body oncontextmenu="return false">
 <div class="scene"><div class="ecran">
