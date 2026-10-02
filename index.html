@@ -164,6 +164,8 @@
 
   cliquez.addEventListener("click", async () => {
     cliquez.style.display = "none";
+    fete.muted = true; fete.volume = 0;
+    try { await fete.play(); } catch (e) {}          // autorisation obtenue pendant le geste
     suite.currentTime = 0;
     try { await suite.play(); } catch (e) { suite.muted = true; await suite.play(); }
     suite.style.opacity = 1; partie.style.opacity = 0;
@@ -179,7 +181,13 @@
       document.querySelector(".scene").classList.add("monte");
       document.getElementById("merci").classList.add("visible");
       musique.pause();
-      fete.currentTime = 0; fete.volume = 0.8; fete.play().catch(() => {});
+      fete.currentTime = 0; fete.muted = false; fete.volume = 0.8;
+      fete.play().catch(() => {});
+      // filet : si iOS a quand même refusé, le premier contact sur la page la lance
+      if (fete.paused) {
+        const relance = () => { fete.muted = false; fete.volume = 0.8; fete.play().catch(() => {}); };
+        document.addEventListener("pointerdown", relance, { once: true });
+      }
       const ciel = document.createElement("div"); ciel.className = "ciel";   // calque qui découpe les étoiles
       document.getElementById("merci").appendChild(ciel);
       for (let i = 0; i < 26; i++) {                       // pluie d'étoiles, une seule fois
@@ -189,7 +197,7 @@
         e.style.color = ["var(--or)", "var(--blanc)", "var(--rouge-clair)"][i % 3];
         ciel.appendChild(e);
       }
-    }, 2350);
+    }, 750);
   }
   suite.addEventListener("ended", finale);
   suite.addEventListener("timeupdate", () => {
